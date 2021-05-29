@@ -1,83 +1,71 @@
 <template>
-  <!-- <div class="container">
-    <h1 class="h1 pb-1 border-bottom border-dark">Login</h1>
-    <p>ログイン状態: {{ $auth.loggedIn }}</p>
-    <div class="row justify-content-md-center">
-      <div class="col-6">
-        <form name="login" @submit.prevent="login()">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              placeholder="Enter email"
-              v-model="form.email"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              type="password"
-              class="form-control"
-              id="password"
-              placeholder="Enter password"
-              v-model="form.password"
-              required
-            />
-          </div>
-          <button type="submit" class="btn btn-success">Submit</button>
-        </form>
-      </div>
-    </div>
-  </div> -->
-  <v-card class="mt-10" elevation="1">
-    <div>
-      <v-btn color="primary" text @click="$router.push('/')">
+  <v-card class="mt-10 mx-auto" max-width="480px" elevation="1">
+    <v-card-actions>
+      <v-btn color="primary" text to="/">
         <v-icon>mdi-chevron-left</v-icon>
         戻る
       </v-btn>
-    </div>
+
+      <v-spacer />
+      <v-btn color="primary" to="/signup" text>
+        登録まだの方
+      </v-btn>
+    </v-card-actions>
     <v-card-title>
-      <span class="headline">ログイン画面</span>
+      <span class="headline mx-auto">ログイン画面</span>
     </v-card-title>
     <v-card-text>
       <v-container>
         <v-row>
           <v-col cols="12">
             <v-text-field
+              v-model="form.user.email"
               label="メールアドレス"
-              v-model="loginUser.email"
               required
+              @keydown.enter="login()"
             ></v-text-field>
           </v-col>
           <v-col cols="12">
             <v-text-field
-              v-model="loginUser.password"
+              v-model="form.user.password"
               label="パスワード"
               type="password"
               required
+              @keydown.enter="login()"
             ></v-text-field>
           </v-col>
-          <!-- <v-col cols="12">
-            <v-text-field
-              v-model="loginUser.password_confirm"
-              label="確認用パスワード"
-              type="password"
-              required
-            ></v-text-field>
-          </v-col> -->
         </v-row>
       </v-container>
     </v-card-text>
 
     <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn @click="login()" color="primary">
-        ログイン
-      </v-btn>
-      <v-spacer></v-spacer>
+      <v-row>
+        <v-col class="text-center" cols="12">
+          <v-btn @click="login()" class="mx-auto" outlined color="primary">
+            ログイン
+          </v-btn>
+        </v-col>
+
+        <v-col class="text-center" cols="12">
+          <v-btn
+            @click="demoLogin('test@test.com', 'test')"
+            outlined
+            color="primary"
+          >
+            デモアカウント1でログイン
+          </v-btn>
+        </v-col>
+
+        <v-col class="text-center" cols="12">
+          <v-btn
+            @click="demoLogin('test2@test.com', 'test')"
+            outlined
+            color="primary"
+          >
+            デモアカウント2でログイン
+          </v-btn>
+        </v-col>
+      </v-row>
     </v-card-actions>
   </v-card>
 </template>
@@ -85,42 +73,18 @@
 <script lang="ts">
 import { defineComponent, inject, provide } from '@nuxtjs/composition-api'
 
-import ChatKey from '../compositions/useChatKey'
-import useChat, { ChatStore } from '../compositions/useChat'
+import AuthKey from '@/compositions/useAuthKey'
+import useAuth, { AuthStore } from '@/compositions/useAuth'
 
 export default defineComponent({
   setup() {
-    provide(ChatKey, useChat())
-    const { loginUser, login } = inject(ChatKey) as ChatStore
+    provide(AuthKey, useAuth())
+    const { form, login, demoLogin } = inject(AuthKey) as AuthStore
     return {
-      loginUser,
+      form,
       login,
+      demoLogin,
     }
   },
 })
-// export default {
-//   data() {
-//     return {
-//       form: {
-//         email: '',
-//         password: '',
-//       },
-//     }
-//   },
-//   mounted() {
-//     this.$axios.get('/sanctum/csrf-cookie')
-//   },
-//   methods: {
-//     async login() {
-//       try {
-//         const response = await this.$auth.loginWith('local', {
-//           data: this.form,
-//         })
-//         console.log(response)
-//       } catch (error) {
-//         console.log(error)
-//       }
-//     },
-//   },
-// }
 </script>

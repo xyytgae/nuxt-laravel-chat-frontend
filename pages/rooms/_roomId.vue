@@ -1,40 +1,55 @@
 <template>
   <div>
-    <Header :title="currentRoom.currentRoom.title" link="/rooms"></Header>
+    <Header :title="current.room.title" link="/rooms"></Header>
 
-    <div style="height:auto;">
-      <v-card flat v-for="chat in chats.chats" :key="chat.id" class="mb-2">
-        <v-card-title v-if="chat.user_id != loginedUser.user.id">
+    <div>
+      <v-card flat v-for="chat in chats.list" :key="chat.id" class="mb-2">
+        <v-card-title class="pb-0 pl-0" v-if="chat.user_id != logined.user.id">
           <v-icon>
             mdi-account
           </v-icon>
-          <span class="title font-weight-light text-h6">{{
-            chat.user_name
-          }}</span>
+          <span class="title font-weight-light text-h6">{{ chat.name }}</span>
         </v-card-title>
-        <v-card-text
-          class="comment pa-4"
-          :class="{ 'ml-auto': chat.user_id == loginedUser.user.id }"
-        >
-          <span>
-            {{ chat.comment }}
-          </span>
+        <v-card-text class="px-0 py-1">
+          <div
+            class="comment py-1 px-4"
+            :class="{ 'ml-auto': chat.user_id == logined.user.id }"
+          >
+            <span>
+              {{ chat.comment }}
+            </span>
+          </div>
         </v-card-text>
       </v-card>
     </div>
 
+    <!-- ボタンの表示/非表示を切り替える用の要素 -->
+    <div v-intersect="onIntersect" id="bottom"></div>
+
     <v-footer padless fixed app>
       <v-card width="100%">
+        <v-btn
+          v-show="!isBottom"
+          color="grey"
+          icon
+          large
+          @click="$vuetify.goTo('#bottom')"
+          class="icon"
+        >
+          <v-icon x-large>
+            mdi-arrow-down-circle
+          </v-icon>
+        </v-btn>
         <v-textarea
           hide-details
           auto-grow
           outlined
           rows="1"
           row-height="10"
-          class="mx-2 my-2"
+          class="ma-1"
           append-outer-icon="mdi-chevron-right"
-          v-model="chat.comment"
-          @click:append-outer="createChat()"
+          v-model="input.chat.comment"
+          @click:append-outer="createChat(logined.user.id)"
         ></v-textarea>
       </v-card>
     </v-footer>
@@ -42,11 +57,13 @@
 </template>
 
 <script lang="ts">
-import Header from '../../components/Header.vue'
-
 import { defineComponent, inject, provide } from '@nuxtjs/composition-api'
-import useChat, { ChatStore } from '../../compositions/useChat'
-import ChatKey from '../../compositions/useChatKey'
+import Header from '@/components/Header.vue'
+
+import useChat, { ChatStore } from '@/compositions/useChat'
+import ChatKey from '@/compositions/useChatKey'
+import AuthKey from '@/compositions/useAuthKey'
+import useAuth, { AuthStore } from '@/compositions/useAuth'
 
 export default defineComponent({
   components: {
@@ -54,29 +71,36 @@ export default defineComponent({
   },
   setup() {
     provide(ChatKey, useChat())
-
     const {
-      loginedUser,
       getChats,
       chats,
-      chat,
+      input,
       createChat,
       getCurrentRoom,
-      currentRoom,
+      current,
+
+      isBottom,
+      onIntersect,
     } = inject(ChatKey) as ChatStore
+
+    provide(AuthKey, useAuth())
+    const { logined } = inject(AuthKey) as AuthStore
+
+    // ページ表示時に実行
+    getChats()
+    getCurrentRoom()
+
     return {
-      loginedUser,
       getChats,
       chats,
-      chat,
+      input,
       createChat,
       getCurrentRoom,
-      currentRoom,
+      current,
+      logined,
+      isBottom,
+      onIntersect,
     }
-  },
-  created() {
-    this.getChats()
-    this.getCurrentRoom()
   },
   mounted() {
     this.$pusher.subscribe('my-channel').bind('my-event', () => {
@@ -87,14 +111,17 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.card {
-  // background: skyblue !important;
+.icon {
+  position: absolute;
+  right: 0;
+  bottom: 70px;
+  margin: auto;
 }
 
 .comment {
-  // background: red;
-  border-radius: 10px 10px 10px 10px;
-  border: 1px solid grey;
-  width: 45%;
+  border-radius: 20px;
+  border: 1px solid rgb(119, 117, 117);
+  display: table;
+  max-width: 80%;
 }
 </style>
